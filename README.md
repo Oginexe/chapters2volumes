@@ -259,6 +259,7 @@ the program refuses and asks you to choose another folder with `-o`.
 - **Your existing volumes are never lost.** A CBZ that is already in the output folder is replaced only if it can be
   rebuilt without losing anything: it was made by this program and all the files it was made from are still there.
   Otherwise it is kept as it is, the preview marks it with `will NOT be replaced`, and the program tells you what to do.
+  When grouping into volumes, nothing at all is created in that case, so that the volume numbers stay in order.
   `--overwrite` replaces it anyway.
 - **New chapters later on?** If you still have all the old chapters, just add the new ones and run the same command:
   only the volumes that change are rebuilt. If the old chapters are gone (you kept only the volumes), add the new
@@ -281,7 +282,8 @@ the program refuses and asks you to choose another folder with `-o`.
 | `a page is not a readable image` | that chapter is damaged or password-protected: replace it |
 | `Volumes NOT created: [...]` / `NOT converted: [...]` | the line marked `ERROR` names the damaged file: replace it and run the same command again |
 | `would replace your original file` | with `--no-merge`, save into another folder with `-o` |
-| `KEPT` / `NOT replaced` | a CBZ with that name already exists and can't be rebuilt: follow the advice printed (usually `--first-volume N`), choose another folder with `-o`, or use `--overwrite` |
+| `will NOT be replaced` / `Nothing was created` | volumes with those names already exist and can't be rebuilt: if your chapters are new, use the `--first-volume N` the program suggests; to rebuild the old volumes, use `--overwrite` |
+| `KEPT` / `NOT replaced` (with `--no-merge`) | a CBZ with that name already exists in the output folder: choose another folder with `-o`, or use `--overwrite` |
 
 ## Checking that it works (optional)
 

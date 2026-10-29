@@ -298,10 +298,12 @@ with tempfile.TemporaryDirectory() as tmp:
     cbz(later / "Ch 157.cbz", {"1.jpg": cover()})
     cbz(later / "Ch 158.cbz", {"1.jpg": single()})
     assert "will NOT be replaced" in run(later, "-o", later, "--dry-run")
+    assert "--first-volume 6" in run(later, "-o", later, "--dry-run"), "the preview must suggest the right number"
     log = run(later, "-o", later, ok=False)
     assert "--first-volume 6" in log and (later / "Later - Volume 01.cbz").read_bytes() == old_volume, \
         "an existing volume that can't be rebuilt was replaced"
     assert "2 chapters found" in log, "an old volume was taken for a chapter"
+    assert "Nothing was created" in log and len(list(later.iterdir())) == 4, "volumes with wrong numbers were made"
     run(later, "-o", later, "--first-volume", "6")
     assert len(pages(later / "Later - Volume 06.cbz")) == 2 and (later / "Later - Volume 01.cbz").read_bytes() == old_volume
 
@@ -314,7 +316,7 @@ with tempfile.TemporaryDirectory() as tmp:
     made = (tmp / "out7" / "Gone - Volume 01.cbz").read_bytes()
     (gone / "c1.cbz").unlink()
     cbz(gone / "c3.cbz", {"1.jpg": single()})
-    assert "KEPT" in run(gone, "-o", tmp / "out7", ok=False)
+    assert "will NOT be replaced" in run(gone, "-o", tmp / "out7", ok=False)
     assert (tmp / "out7" / "Gone - Volume 01.cbz").read_bytes() == made, "a volume whose chapter is gone was replaced"
     run(gone, "-o", tmp / "out7", "--overwrite")  # unless you ask for it
     assert (tmp / "out7" / "Gone - Volume 01.cbz").read_bytes() != made

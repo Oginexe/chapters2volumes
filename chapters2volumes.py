@@ -552,32 +552,38 @@ def main():
     plan = [(args.first_volume + i, chs, args.output / f"{file_series} - Volume {args.first_volume + i:0{width}d}.cbz")
             for i, chs in enumerate(volumes)]
     present = {f.name for *_, f in candidates}  # every chapter file in the folder, even outside --from/--to
+    # volumes that exist and can't be rebuilt from the chapters here (e.g. made earlier from chapters that are gone)
+    blocked = [number for number, chs, dest in plan if kept_safe(dest, chs, present, args)]
 
     print()
     for number, chs, dest in plan:
         warn = "  <-- few chapters?" if len(chs) < args.min_chapters and args.detect != "none" else ""
-        if kept_safe(dest, chs, present, args):
+        if number in blocked:
             warn += "  <-- a different volume with this name already exists: it will NOT be replaced"
         print(f"Volume {number:0{width}d}: {describe(chs)}{warn}")
     if len(volumes) == 1 and len(chapters) > 1 and args.detect != "none" and not (args.starts or args.not_starts):
         print("\nTip: no volume start was found, so everything is in one volume. If the covers aren't in colour, "
               "try --detect portrait, or split by hand with --detect none plus --starts and/or --max-chapters.")
+    if blocked:
+        existing = [int(m.group(1)) for m in map(volume_name.fullmatch, os.listdir(args.output)) if m]
+        print(f"\nVolumes {blocked} already exist and can't be rebuilt from the chapters in this folder, "
+              "so they will NOT be replaced.\n"
+              f"- If these chapters are new, add them after your volumes with --first-volume "
+              f"{max(existing, default=max(blocked)) + 1}\n"
+              "- If you want to rebuild the old volumes from these chapters, use --overwrite")
+        if not args.dry_run:
+            sys.exit("\nNothing was created, so that the volume numbers stay in order.")
     if args.dry_run:
         print("\nPreview finished, nothing was created.")
         return
 
     args.output.mkdir(parents=True, exist_ok=True)
     print()
-    failed, kept = [], []
+    failed = []
     for i, (number, chs, dest) in enumerate(plan, 1):
         progress = f"Volume {number:0{width}d} ({i}/{len(volumes)})"
         if not args.overwrite and zip_comment(dest) == signature(chs, args):
             print(f"{progress}: already done with the same chapters, skipping ({dest.name})")
-            continue
-        if kept_safe(dest, chs, present, args):  # e.g. a volume made earlier from chapters that are gone
-            print(f"{progress}: KEPT: {dest.name} already exists and can't be rebuilt from the chapters here, "
-                  "so it is left as it is")
-            kept.append(number)
             continue
         print(f"{progress}: {describe(chs)}", flush=True)
         try:
@@ -588,16 +594,8 @@ def main():
             failed.append(number)
             continue
         print(f"  {count(pages, 'page')} -> {dest.name}")
-    if kept:
-        existing = [int(m.group(1)) for m in map(volume_name.fullmatch, os.listdir(args.output)) if m]
-        print(f"\nNOT replaced: volumes {kept}, because volumes with the same name already exist.\n"
-              f"To add these chapters as new volumes after the ones you have, run the same command with "
-              f"--first-volume {max(existing, default=max(kept)) + 1}.\n"
-              "To replace the old volumes anyway, use --overwrite.")
     if failed:
         sys.exit(f"\nVolumes NOT created: {failed}. Check those chapters and run the same command again.")
-    if kept:
-        sys.exit(1)
 
 
 if __name__ == "__main__":

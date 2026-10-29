@@ -262,6 +262,7 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 - **I tuoi volumi esistenti non vengono mai persi.** Un CBZ che c'è già nella cartella di uscita viene sostituito solo se
   si può ricreare senza perdere niente: è stato fatto da questo programma e tutti i file da cui è nato ci sono ancora.
   Altrimenti resta com'è, l'anteprima lo segna con `will NOT be replaced` e il programma ti dice cosa fare.
+  Quando si uniscono capitoli in volumi, in quel caso non viene creato proprio niente, così i numeri dei volumi restano in ordine.
   `--overwrite` lo sostituisce comunque.
 - **Nuovi capitoli più avanti?** Se hai ancora tutti i vecchi capitoli, aggiungi i nuovi e rilancia lo stesso comando:
   vengono rifatti solo i volumi che cambiano. Se i vecchi capitoli non ci sono più (hai tenuto solo i volumi), aggiungi
@@ -285,7 +286,8 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 | `a page is not a readable image` | un capitolo è rovinato o protetto da password | sostituisci quel file |
 | `Volumes NOT created: [...]` / `NOT converted: [...]` | alcuni file non sono stati creati | la riga con `ERROR` indica il file rovinato: sostituiscilo e rilancia lo stesso comando |
 | `would replace your original file` | con `--no-merge`, il risultato sovrascriverebbe un tuo file | salva in un'altra cartella con `-o` |
-| `KEPT` / `NOT replaced` | un CBZ con quel nome esiste già e non si può ricreare, quindi è stato lasciato com'era | segui il consiglio che compare (di solito `--first-volume N`), scegli un'altra cartella con `-o`, oppure usa `--overwrite` |
+| `will NOT be replaced` / `Nothing was created` | esistono già volumi con quei nomi che non si possono ricreare, quindi non è stato creato niente | se i capitoli sono nuovi, usa il `--first-volume N` suggerito dal programma; per rifare i vecchi volumi, usa `--overwrite` |
+| `KEPT` / `NOT replaced` (con `--no-merge`) | un CBZ con quel nome esiste già nella cartella di uscita | scegli un'altra cartella con `-o`, oppure usa `--overwrite` |
 
 ## Verificare che funzioni (facoltativo)
 
