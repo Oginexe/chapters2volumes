@@ -287,7 +287,19 @@ with tempfile.TemporaryDirectory() as tmp:
         assert f"{name} would replace your original file" in log, f"{name} was not protected"
     assert (vols / "Extra.cbz").read_bytes() == extra_before, "an original file was changed"
     assert not (vols / "Upper.cbz").exists(), "a file differing only in case was written next to the original"
-    assert "files already made by this program" in run(vols, "-o", vols, "--no-merge", ok=False)
+    log = run(vols, "-o", vols, "--no-merge", ok=False)  # still failing only for the real originals
+    assert "files already made by this program" in log
+    assert "Vol 1.cbz would replace" not in log, "a CBZ made by this program was taken for an original"
+    assert log.count("already done") == 3, "the CBZ files made on the first run must be recognised as done"
+
+    # a folder with a generic name ("Volumi"): the series name comes from the folder above it
+    generic = tmp / "Some Series" / "Volumi"
+    generic.mkdir(parents=True)
+    cbz(generic / "Some Series [Volume 01].cbz", {"1.jpg": cover()})
+    assert "Series: Some Series (from the folder name" in run(generic, "-o", tmp / "out9", "--no-merge")
+    with zipfile.ZipFile(tmp / "out9" / "Some Series [Volume 01].cbz") as z:
+        assert "<Series>Some Series</Series>" in z.read("ComicInfo.xml").decode()
+    assert "Series: Other\n" in run(generic, "--no-merge", "--series", "Other", "--dry-run")
 
     # new chapters added next to volumes made earlier, whose chapters are gone: the old volumes must survive
     later = tmp / "Later"

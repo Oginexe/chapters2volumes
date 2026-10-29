@@ -144,6 +144,7 @@ python3 chapters2volumes.py "~/Manga/Il Mio Manga" --series "Il Mio Manga" --min
 Vedrai qualcosa del genere:
 
 ```
+Series: Il Mio Manga
 156 chapters found, looking for covers...
   ch. 12: colour 0.93 -> NEW VOLUME (cover)
   ch. 25: colour 0.46 -> NEW VOLUME (cover)
@@ -153,7 +154,7 @@ Volume 02: chapters 12-24 (13 chapters)
 ...
 ```
 
-Cioè: 156 capitoli trovati; al capitolo 12 c'è una copertina (colore 0.93), quindi lì comincia un nuovo volume; il volume 01 va dal capitolo 1 all'11.
+Cioè: la serie si chiama "Il Mio Manga"; 156 capitoli trovati; al capitolo 12 c'è una copertina (colore 0.93), quindi lì comincia un nuovo volume; il volume 01 va dal capitolo 1 all'11.
 Il numero del *colore* va da 0 (bianco e nero) a 1 (tutto a colori).
 
 ### 2. Controlla, e correggi se serve
@@ -221,7 +222,7 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 |---|---|---|
 | *cartella* (primo argomento) | cartella con i capitoli (PDF, CBZ, CBR, cartelle di immagini o misti) | obbligatoria |
 | `-o`, `--output` | dove salvare i volumi | `output` |
-| `-s`, `--series` | nome della serie, usato nei nomi dei file e nelle informazioni del volume | il nome della cartella |
+| `-s`, `--series` | nome della serie, usato nei nomi dei file e nelle informazioni del volume | il nome della cartella (o di quella sopra, se la cartella si chiama per esempio `Volumi`, `Volumes`, `Capitoli`, `CBZ`) |
 | `--dry-run` | solo anteprima, non crea niente | spento |
 | `--detect` | come riconosce l'inizio di un volume: `color` o `colour` (copertina a colori), `portrait` (qualsiasi pagina singola verticale), `none` (a mano) | `color` |
 | `--threshold X` | quanto deve essere colorata una pagina per essere una copertina (da 0 a 1) | 0.25 |

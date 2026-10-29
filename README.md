@@ -142,6 +142,7 @@ python3 chapters2volumes.py "~/Manga/My Manga" --series "My Manga" --min-chapter
 You will see something like:
 
 ```
+Series: My Manga
 156 chapters found, looking for covers...
   ch. 12: colour 0.93 -> NEW VOLUME (cover)
   ch. 25: colour 0.46 -> NEW VOLUME (cover)
@@ -218,7 +219,7 @@ the program refuses and asks you to choose another folder with `-o`.
 |---|---|---|
 | *folder* (first argument) | folder with the chapters (PDF, CBZ, CBR, folders of images, or a mix) | required |
 | `-o`, `--output` | where to save the volumes | `output` |
-| `-s`, `--series` | series name, used in the file names and in the volume information | the folder's name |
+| `-s`, `--series` | series name, used in the file names and in the volume information | the folder's name (or the folder above, if the folder is called e.g. `Volumes`, `Volumi`, `Chapters`, `CBZ`) |
 | `--dry-run` | preview only, creates nothing | off |
 | `--detect` | how a volume start is recognised: `color` or `colour` (colour cover), `portrait` (any upright single page), `none` (manual) | `color` |
 | `--threshold X` | how colourful a page must be to count as a cover (0–1) | 0.25 |
