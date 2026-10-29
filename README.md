@@ -276,6 +276,7 @@ the program refuses and asks you to choose another folder with `-o`.
 
 | Message | What to do |
 |---|---|
+| `WARNING: chapters missing from the numbering: [...]` | some chapters are missing: check whether you need them; the program carries on anyway |
 | `the following arguments are required: -s/--series` | add the series name, e.g. `--series "My Manga"` |
 | `Reading PDFs needs pdfimages` | install poppler (see *What you need*) |
 | `... reading them needs bsdtar` | install bsdtar (see *What you need*) |
@@ -293,7 +294,7 @@ the program refuses and asks you to choose another folder with `-o`.
 ## Checking that it works (optional)
 
 `test_chapters2volumes.py` creates fake chapters (PDF, CBZ, real RAR files and folders of images) in a temporary folder
-and checks volumes, page order, cutting, chapter parts, manual mode, `--no-merge`, error handling, safety and more:
+and checks volumes, page order, cutting, decimal chapter numbers, manual mode, `--no-merge`, error handling, safety and more:
 
 ```
 python3 test_chapters2volumes.py

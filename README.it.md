@@ -297,7 +297,7 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 ## Verificare che funzioni (facoltativo)
 
 `test_chapters2volumes.py` crea finti capitoli (PDF, CBZ, veri file RAR e cartelle di immagini) in una cartella temporanea
-e controlla volumi, ordine delle pagine, taglio, parti di capitolo, modalità manuale, `--no-merge`, gestione degli errori, sicurezza e altro:
+e controlla volumi, ordine delle pagine, taglio, numeri di capitolo decimali, modalità manuale, `--no-merge`, gestione degli errori, sicurezza e altro:
 
 ```
 python3 test_chapters2volumes.py
