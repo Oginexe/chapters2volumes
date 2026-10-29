@@ -132,6 +132,8 @@ Open a terminal in the folder where `chapters2volumes.py` is.
 In the examples, the chapters are in the folder `~/Manga/My Manga` (`~` means "your home folder";
 on Windows you can also write a full path such as `"C:\Manga\My Manga"`).
 **Use quotes** around names that contain spaces.
+Always give the **series name** with `--series`: it is used in the file names and in the volume information that
+reader apps show, so the program never guesses it.
 
 ### 1. Preview (creates nothing)
 
@@ -185,15 +187,15 @@ and puts every chapter in one volume (the program tells you so). You have three 
 
 - **Covers in black and white** — count any upright single page that opens a chapter as a cover:
   ```
-  python3 chapters2volumes.py "~/Manga/My Manga" --detect portrait --min-chapters 8 --dry-run
+  python3 chapters2volumes.py "~/Manga/My Manga" --series "My Manga" --detect portrait --min-chapters 8 --dry-run
   ```
 - **You know where volumes start** (e.g. from a list of volumes on a wiki) — give the first chapter of each volume:
   ```
-  python3 chapters2volumes.py "~/Manga/My Manga" --detect none --starts 1,10,19,28,37 --dry-run
+  python3 chapters2volumes.py "~/Manga/My Manga" --series "My Manga" --detect none --starts 1,10,19,28,37 --dry-run
   ```
 - **You just want volumes of the same size** — e.g. one volume every 10 chapters:
   ```
-  python3 chapters2volumes.py "~/Manga/My Manga" --detect none --max-chapters 10 --dry-run
+  python3 chapters2volumes.py "~/Manga/My Manga" --series "My Manga" --detect none --max-chapters 10 --dry-run
   ```
 
 You can combine them: `--starts` and `--max-chapters` together, or `--not-starts` to fix a single mistake.
@@ -206,8 +208,8 @@ every file or folder becomes one CBZ **with the same name** (`Vol 3.pdf` → `Vo
 Double pages are still cut and the volume information is still added; files without a number in the name are fine too.
 
 ```
-python3 chapters2volumes.py "~/Manga/My Volumes" --no-merge --dry-run
-python3 chapters2volumes.py "~/Manga/My Volumes" --no-merge -o "~/Manga/CBZ"
+python3 chapters2volumes.py "~/Manga/My Volumes" --series "My Manga" --no-merge --dry-run
+python3 chapters2volumes.py "~/Manga/My Volumes" --series "My Manga" --no-merge -o "~/Manga/CBZ"
 ```
 
 Your original files are never overwritten: if a CBZ would get the same name as an original CBZ in the same folder,
@@ -219,7 +221,7 @@ the program refuses and asks you to choose another folder with `-o`.
 |---|---|---|
 | *folder* (first argument) | folder with the chapters (PDF, CBZ, CBR, folders of images, or a mix) | required |
 | `-o`, `--output` | where to save the volumes | `output` |
-| `-s`, `--series` | series name, used in the file names and in the volume information | the folder's name (or the folder above, if the folder is called e.g. `Volumes`, `Volumi`, `Chapters`, `CBZ`) |
+| `-s`, `--series` | series name, used in the file names and in the volume information | **required** |
 | `--dry-run` | preview only, creates nothing | off |
 | `--detect` | how a volume start is recognised: `color` or `colour` (colour cover), `portrait` (any upright single page), `none` (manual) | `color` |
 | `--threshold X` | how colourful a page must be to count as a cover (0–1) | 0.25 |
@@ -273,6 +275,7 @@ the program refuses and asks you to choose another folder with `-o`.
 
 | Message | What to do |
 |---|---|
+| `the following arguments are required: -s/--series` | add the series name, e.g. `--series "My Manga"` |
 | `Reading PDFs needs pdfimages` | install poppler (see *What you need*) |
 | `... reading them needs bsdtar` | install bsdtar (see *What you need*) |
 | `ModuleNotFoundError: No module named 'PIL'` | install Pillow (see *What you need*) |

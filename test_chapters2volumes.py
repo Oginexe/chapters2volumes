@@ -66,7 +66,11 @@ def double(mode="RGB"):  # landscape: left half black, right half white
 
 
 def run(*args, ok=True, env=None):
-    r = subprocess.run([sys.executable, str(SCRIPT), *map(str, args)], capture_output=True, text=True, env=env)
+    """Runs the program; unless the test gives --series, the series is named after the chapters' folder."""
+    args = [str(a) for a in args]
+    if "--series" not in args and args and not args[0].startswith("-"):
+        args += ["--series", Path(args[0]).name]
+    r = subprocess.run([sys.executable, str(SCRIPT), *args], capture_output=True, text=True, env=env)
     print(r.stdout, r.stderr)
     assert (r.returncode == 0) == ok, "unexpected exit code"
     return r.stdout + r.stderr
@@ -292,14 +296,18 @@ with tempfile.TemporaryDirectory() as tmp:
     assert "Vol 1.cbz would replace" not in log, "a CBZ made by this program was taken for an original"
     assert log.count("already done") == 3, "the CBZ files made on the first run must be recognised as done"
 
-    # a folder with a generic name ("Volumi"): the series name comes from the folder above it
-    generic = tmp / "Some Series" / "Volumi"
-    generic.mkdir(parents=True)
-    cbz(generic / "Some Series [Volume 01].cbz", {"1.jpg": cover()})
-    assert "Series: Some Series (from the folder name" in run(generic, "-o", tmp / "out9", "--no-merge")
+    # the series name is always chosen by the user: never taken from a folder name
+    named = tmp / "Some Series" / "Volumi"
+    named.mkdir(parents=True)
+    cbz(named / "Some Series [Volume 01].cbz", {"1.jpg": cover()})
+    no_series = subprocess.run([sys.executable, str(SCRIPT), str(named), "--no-merge", "--dry-run"],
+                               capture_output=True, text=True)
+    assert no_series.returncode != 0 and "--series" in no_series.stderr, "--series must be required"
+    assert "can't be empty" in run(named, "--no-merge", "--series", " ", "--dry-run", ok=False)
+    assert "no letters or digits" in run(named, "--no-merge", "--series", "...", "--dry-run", ok=False)
+    assert "Series: Other Name\n" in run(named, "-o", tmp / "out9", "--no-merge", "--series", "Other Name")
     with zipfile.ZipFile(tmp / "out9" / "Some Series [Volume 01].cbz") as z:
-        assert "<Series>Some Series</Series>" in z.read("ComicInfo.xml").decode()
-    assert "Series: Other\n" in run(generic, "--no-merge", "--series", "Other", "--dry-run")
+        assert "<Series>Other Name</Series>" in z.read("ComicInfo.xml").decode()
 
     # new chapters added next to volumes made earlier, whose chapters are gone: the old volumes must survive
     later = tmp / "Later"
@@ -318,6 +326,15 @@ with tempfile.TemporaryDirectory() as tmp:
     assert "Nothing was created" in log and len(list(later.iterdir())) == 4, "volumes with wrong numbers were made"
     run(later, "-o", later, "--first-volume", "6")
     assert len(pages(later / "Later - Volume 06.cbz")) == 2 and (later / "Later - Volume 01.cbz").read_bytes() == old_volume
+
+    # an old volume made under another series name is still a volume, never a chapter
+    renamed = tmp / "Renamed"
+    renamed.mkdir()
+    cbz(renamed / "Old Name - Volume 01.cbz", {"1.jpg": cover()})
+    cbz(renamed / "Ch 2.cbz", {"1.jpg": cover()})
+    cbz(renamed / "Ch 3.cbz", {"1.jpg": single()})
+    log = run(renamed, "--series", "New Name", "--dry-run")
+    assert "ignoring 1 volume already made" in log and "2 chapters found" in log, "an old volume was taken for a chapter"
 
     # a volume made by this program, then one of its chapters deleted: it can't be rebuilt, so it is kept
     gone = tmp / "Gone"
@@ -347,7 +364,7 @@ with tempfile.TemporaryDirectory() as tmp:
     odd.mkdir()
     pdf(odd / "-c1.pdf", [cover(), double()])
     pdf(odd / "c2 1698765432.pdf", [double()])
-    r = subprocess.run([sys.executable, str(SCRIPT), ".", "--dry-run"], cwd=odd, capture_output=True, text=True, timeout=60)
+    r = subprocess.run([sys.executable, str(SCRIPT), ".", "--dry-run", "--series", "Odd"], cwd=odd, capture_output=True, text=True, timeout=60)
     print(r.stdout, r.stderr)
     assert r.returncode == 0 and "and 1698765410 more" in r.stdout and "2 chapters found" in r.stdout
 

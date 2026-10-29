@@ -134,6 +134,8 @@ Apri un terminale nella cartella dove si trova `chapters2volumes.py`.
 Negli esempi i capitoli sono nella cartella `~/Manga/Il Mio Manga` (`~` vuol dire "la tua cartella personale";
 su Windows puoi anche scrivere un percorso completo come `"C:\Manga\Il Mio Manga"`).
 **Metti le virgolette** attorno ai nomi che contengono spazi.
+Indica sempre il **nome della serie** con `--series`: viene usato nei nomi dei file e nelle informazioni del volume
+mostrate dai lettori, quindi il programma non lo indovina mai da solo.
 
 ### 1. Anteprima (non crea niente)
 
@@ -188,15 +190,15 @@ e mette tutti i capitoli in un unico volume (il programma te lo dice con un mess
 
 - **Copertine in bianco e nero**: conta come copertina qualsiasi pagina singola verticale che apre un capitolo:
   ```
-  python3 chapters2volumes.py "~/Manga/Il Mio Manga" --detect portrait --min-chapters 8 --dry-run
+  python3 chapters2volumes.py "~/Manga/Il Mio Manga" --series "Il Mio Manga" --detect portrait --min-chapters 8 --dry-run
   ```
 - **Sai dove iniziano i volumi** (es. da un elenco dei volumi su una wiki): indica il primo capitolo di ogni volume:
   ```
-  python3 chapters2volumes.py "~/Manga/Il Mio Manga" --detect none --starts 1,10,19,28,37 --dry-run
+  python3 chapters2volumes.py "~/Manga/Il Mio Manga" --series "Il Mio Manga" --detect none --starts 1,10,19,28,37 --dry-run
   ```
 - **Vuoi solo volumi della stessa dimensione**: per esempio un volume ogni 10 capitoli:
   ```
-  python3 chapters2volumes.py "~/Manga/Il Mio Manga" --detect none --max-chapters 10 --dry-run
+  python3 chapters2volumes.py "~/Manga/Il Mio Manga" --series "Il Mio Manga" --detect none --max-chapters 10 --dry-run
   ```
 
 Puoi combinarle: `--starts` e `--max-chapters` insieme, oppure `--not-starts` per correggere un singolo errore.
@@ -209,8 +211,8 @@ ogni file o cartella diventa un CBZ **con lo stesso nome** (`Vol 3.pdf` → `Vol
 Le doppie pagine vengono comunque tagliate e le informazioni del volume aggiunte; vanno bene anche i file senza numero nel nome.
 
 ```
-python3 chapters2volumes.py "~/Manga/I Miei Volumi" --no-merge --dry-run
-python3 chapters2volumes.py "~/Manga/I Miei Volumi" --no-merge -o "~/Manga/CBZ"
+python3 chapters2volumes.py "~/Manga/I Miei Volumi" --series "Il Mio Manga" --no-merge --dry-run
+python3 chapters2volumes.py "~/Manga/I Miei Volumi" --series "Il Mio Manga" --no-merge -o "~/Manga/CBZ"
 ```
 
 I tuoi file originali non vengono mai sovrascritti: se un CBZ avesse lo stesso nome di un CBZ originale nella stessa cartella,
@@ -222,7 +224,7 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 |---|---|---|
 | *cartella* (primo argomento) | cartella con i capitoli (PDF, CBZ, CBR, cartelle di immagini o misti) | obbligatoria |
 | `-o`, `--output` | dove salvare i volumi | `output` |
-| `-s`, `--series` | nome della serie, usato nei nomi dei file e nelle informazioni del volume | il nome della cartella (o di quella sopra, se la cartella si chiama per esempio `Volumi`, `Volumes`, `Capitoli`, `CBZ`) |
+| `-s`, `--series` | nome della serie, usato nei nomi dei file e nelle informazioni del volume | **obbligatoria** |
 | `--dry-run` | solo anteprima, non crea niente | spento |
 | `--detect` | come riconosce l'inizio di un volume: `color` o `colour` (copertina a colori), `portrait` (qualsiasi pagina singola verticale), `none` (a mano) | `color` |
 | `--threshold X` | quanto deve essere colorata una pagina per essere una copertina (da 0 a 1) | 0.25 |
@@ -277,6 +279,7 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 | Messaggio | Significa | Cosa fare |
 |---|---|---|
 | `WARNING: chapters missing from the numbering: [...]` | mancano dei capitoli | controlla se ti servono; il programma continua comunque |
+| `the following arguments are required: -s/--series` | manca il nome della serie | aggiungilo, es. `--series "Il Mio Manga"` |
 | `Reading PDFs needs pdfimages` | manca poppler | installalo (vedi *Cosa serve*) |
 | `... reading them needs bsdtar` | manca bsdtar (serve per i CBR) | installalo (vedi *Cosa serve*) |
 | `ModuleNotFoundError: No module named 'PIL'` | manca Pillow | installalo (vedi *Cosa serve*) |

@@ -27,9 +27,6 @@ IMAGES = {".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".tif", ".tiff"}  # 
 READABLE = {".jpg", ".jpeg", ".png", ".webp", ".gif"}  # pages every comic reader shows; others become PNG
 SIGNATURE = b"chapters "  # start of the zip comment of every CBZ made by this program
 MAX_IMAGE = 200 * 2**20  # no real page weighs 200 MB: beyond that the archive is broken or malicious
-# folder names that say what is inside, not which series: e.g. "My Manga/Volumes" gives the series "My Manga"
-GENERIC_FOLDERS = {"volumes", "volume", "vol", "volumi", "chapters", "chapter", "capitoli", "capitolo",
-                   "manga", "cbz", "cbr", "pdf", "scans", "downloads"}
 
 
 # a chapter number, optionally with decimals written as "22.5", "22_5" or "22-5"
@@ -458,8 +455,8 @@ def main():
                    help="folder with the chapters (PDF, CBZ and/or CBR files, or folders of images)")
     p.add_argument("-o", "--output", type=folder_path, default=Path("output"), metavar="FOLDER",
                    help="where to save the volumes (default: output)")
-    p.add_argument("-s", "--series", metavar="NAME", help="series name used in the file names and in the volume information "
-                        "(default: the folder's name, or its parent's if the folder is called e.g. \"Volumes\")")
+    p.add_argument("-s", "--series", metavar="NAME", required=True,
+                   help="series name, used in the file names and in the volume information (required)")
     p.add_argument("--detect", choices=("color", "portrait", "none"), default="color",
                    type=lambda s: "color" if s == "colour" else s,  # both spellings work
                    help="what marks a volume's first chapter: a colour portrait page (default), "
@@ -491,14 +488,17 @@ def main():
 
     if not args.folder.is_dir():
         sys.exit(f"The folder {args.folder} doesn't exist.")
-    folder = args.folder.resolve()
-    series = args.series or (folder.parent.name if folder.name.lower() in GENERIC_FOLDERS and folder.parent.name
-                             else folder.name)
-    print(f"Series: {series}" + ("" if args.series else " (from the folder name; change it with --series)"))
+    series = args.series.strip()
+    if not series:
+        p.error("--series can't be empty")
     # characters that Windows (and other systems) don't allow in file names
-    file_series = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "-", series).rstrip(". ") or "Manga"
+    file_series = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "-", series).rstrip(". ")
+    if not file_series.strip("- "):
+        p.error(f"--series '{series}' has no letters or digits that can be used in a file name")
+    print(f"Series: {series}")
     # any capitalisation: on Windows and macOS "my manga - volume 01.cbz" is the same file
     volume_name = re.compile(re.escape(file_series) + r" - Volume (\d+)\.cbz", re.IGNORECASE)
+    any_volume = re.compile(r".+ - Volume \d+\.cbz", re.IGNORECASE)  # a volume, even one made under another series name
 
     def chapter_format(f):
         if f.name.startswith("."):  # hidden files (e.g. "._Ch 1.pdf" made by Macs) are not chapters
@@ -517,7 +517,7 @@ def main():
         return convert_each([f for *_, f in candidates], args, series)
     chosen, old_volumes = {}, 0
     for *_, f in candidates:
-        if f.suffix.lower() == ".cbz" and (volume_name.fullmatch(f.name) or zip_comment(f).startswith(SIGNATURE)):
+        if f.suffix.lower() == ".cbz" and (any_volume.fullmatch(f.name) or zip_comment(f).startswith(SIGNATURE)):
             old_volumes += 1  # a volume made by this program, not a chapter
             continue
         n = chapter_number(f)
