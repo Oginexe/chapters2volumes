@@ -1,0 +1,13 @@
+# never publish manga files or results by mistake
+*.pdf
+*.PDF
+*.cbz
+*.CBZ
+*.cbr
+*.CBR
+*.part
+output/
+
+# Python
+__pycache__/
+.venv/
