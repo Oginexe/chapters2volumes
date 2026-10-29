@@ -29,8 +29,8 @@ SIGNATURE = b"chapters "  # start of the zip comment of every CBZ made by this p
 MAX_IMAGE = 200 * 2**20  # no real page weighs 200 MB: beyond that the archive is broken or malicious
 
 
-# a chapter number, optionally with decimals written as "22.5", "22_5" or "22-5"
-CHAPTER = re.compile(r"(\d+)(?:[._-](\d+))?")
+# a chapter number, optionally with decimals written as "22.5", "22,5", "22_5" or "22-5"
+CHAPTER = re.compile(r"(\d+)(?:[.,_-](\d+))?")
 
 
 def to_chapter(main, part):
@@ -350,7 +350,7 @@ def number_list(text):
         return {chapter_arg(x) for x in text.split(",") if x.strip()}
     except argparse.ArgumentTypeError:
         raise argparse.ArgumentTypeError(
-            f"'{text}': use chapter numbers separated by commas, e.g. 25,37 or 22.5,22_6") from None
+            f"'{text}': use chapter numbers separated by commas, with a dot for decimals: e.g. 25,37 or 22.5,22.6") from None
 
 
 def folder_path(text):
@@ -466,7 +466,7 @@ def main():
     p.add_argument("--min-chapters", type=int, default=5, metavar="N", help="minimum chapters per volume (default 5)")
     p.add_argument("--max-chapters", type=int, metavar="N", help="maximum chapters per volume (default: no limit)")
     p.add_argument("--starts", type=number_list, default=set(), metavar="LIST",
-                   help="chapters that surely start a volume, e.g. 25,37")
+                   help="chapters that surely start a volume, e.g. 25,37 (decimals with a dot: 22.5)")
     p.add_argument("--not-starts", type=number_list, default=set(), metavar="LIST",
                    help="chapters that surely don't start a volume, e.g. 42")
     p.add_argument("--from", dest="first", type=chapter_arg, metavar="N", help="first chapter to use")

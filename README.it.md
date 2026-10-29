@@ -245,10 +245,11 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 
 - **Come vengono numerati i capitoli:** il programma usa l'**ultimo numero nel nome del file o della cartella**:
   `Il Mio Manga - Capitolo 012.pdf` → capitolo 12.
-  Due numeri uniti da `.`, `_` o `-` vengono letti come **numero decimale**: `22.5`, `22_5` e `22-5` sono tutti 22,5,
+  Due numeri uniti da `.`, `,`, `_` o `-` vengono letti come **numero decimale**: `22.5`, `22,5`, `22_5` e `22-5` sono tutti 22,5,
   che va dopo il 22 e prima del 23. Come per ogni decimale, `22.10` vale 22,1, quindi viene **prima** di `22.2`
   (e `22.1` e `22.10` contano come lo stesso capitolo: se ci sono tutti e due ricevi un avviso).
-  Lo stesso vale per le opzioni: `--starts 22_5`, `--from 22.5`.
+  Lo stesso vale per le opzioni: `--from 22,5`, `--starts 22.5` (negli elenchi di `--starts` e `--not-starts`
+  la virgola separa i capitoli, quindi scrivi i decimali con il punto: `--starts 22.5,30`).
   Evita altri numeri alla fine del nome (es. `Capitolo 12 (2024).pdf` verrebbe letto come capitolo 2024).
 - **Cartelle di immagini:** ogni cartella dentro la cartella principale è un capitolo (es. `Il Mio Manga/Capitolo 12/001.jpg`).
   Le pagine vengono prese in ordine di nome, sottocartelle comprese; le cartelle senza immagini vengono ignorate.

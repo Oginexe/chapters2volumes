@@ -248,7 +248,7 @@ with tempfile.TemporaryDirectory() as tmp:
     # chapter parts written as 22.5, 22_5 or 22-5: decimals, so after 22 and before 23, and 22.10 (= 22.1) before 22.2
     parts = tmp / "Parts"
     parts.mkdir()
-    for name in ("Ch 22", "Ch 22_2", "Ch 22.5", "Ch 22_10", "Ch 23", "Ch 24-5", "Ch 24", "Ch 34-3", "Vol.02 Ch.035"):
+    for name in ("Ch 22", "Ch 22_2", "Ch 22.5", "Ch 22_10", "Ch 23", "Ch 23,5", "Ch 24-5", "Ch 24", "Ch 34-3", "Vol.02 Ch.035"):
         cbz(parts / f"{name}.cbz", {"1.jpg": single()})
     cbz(parts / "Ch 22-5.cbz", {"1.jpg": single()})  # the same chapter as "22.5", written differently
 
@@ -257,9 +257,10 @@ with tempfile.TemporaryDirectory() as tmp:
                 .splitlines() if line.startswith("Volume ")]
 
     assert order("--max-chapters", "1") == ["chapter 22", "chapter 22.10", "chapter 22.2", "chapter 22.5", "chapter 23",
-                                            "chapter 24", "chapter 24.5", "chapter 34.3", "chapter 35"]
+                                            "chapter 23.5", "chapter 24", "chapter 24.5", "chapter 34.3", "chapter 35"]
+    assert order("--from", "23,5", "--to", "23,5") == ["chapter 23.5"], "a decimal comma (23,5) must work too"
     assert "chapter 22.5 is there twice" in run(parts, "--dry-run", "--detect", "none")
-    assert order("--starts", "22_5,24") == ["chapters 22-22.2", "chapters 22.5-23", "chapters 24-35"]
+    assert order("--starts", "22_5,24") == ["chapters 22-22.2", "chapters 22.5-23.5", "chapters 24-35"]
     assert order("--starts", "22.2") == ["chapters 22-22.10", "chapters 22.2-35"], "22.10 must come before 22.2"
     assert order("--starts", "22.100") == ["chapter 22", "chapters 22.10-35"], "22.100 is the same number as 22.10"
     assert order("--from", "22-5", "--to", "24") == ["chapters 22.5-24"]

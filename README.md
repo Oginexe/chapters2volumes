@@ -242,10 +242,11 @@ the program refuses and asks you to choose another folder with `-o`.
 
 - **How chapters are numbered:** the program uses the **last number in the file or folder name**:
   `My Manga - Chapter 012.pdf` → chapter 12.
-  Two numbers joined by `.`, `_` or `-` are read as a **decimal number**: `22.5`, `22_5` and `22-5` are all 22.5,
+  Two numbers joined by `.`, `,`, `_` or `-` are read as a **decimal number**: `22.5`, `22,5`, `22_5` and `22-5` are all 22.5,
   which comes after 22 and before 23. As with any decimal, `22.10` is 22.1, so it comes **before** `22.2`
   (and `22.1` and `22.10` count as the same chapter: you get a warning if both are there).
-  The same goes for the options: `--starts 22_5`, `--from 22.5`.
+  The same goes for the options: `--from 22,5`, `--starts 22.5` (in the lists of `--starts` and `--not-starts`
+  the comma separates chapters, so write decimals with a dot: `--starts 22.5,30`).
   Avoid other numbers at the end of the name (e.g. `Chapter 12 (2024).pdf` would be read as chapter 2024).
 - **Folders of images:** each folder inside the main folder is a chapter (e.g. `My Manga/Chapter 12/001.jpg`).
   Its pages are taken in name order, subfolders included; folders without images are ignored.
