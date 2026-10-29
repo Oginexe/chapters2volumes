@@ -261,6 +261,20 @@ def signature(chapters, args):
             f"split={args.split}; left_first={args.left_first}".encode())
 
 
+def kept_safe(dest, chapters, present, args):
+    """True if dest exists and rebuilding it could lose pages, so it must be left alone:
+    it wasn't made by this program, or some of the files it was made from are no longer here."""
+    if args.overwrite or not dest.exists():
+        return False
+    comment = zip_comment(dest)
+    if comment == signature(chapters, args):
+        return False  # same content: it is simply skipped as already done
+    if not comment.startswith(SIGNATURE):
+        return True
+    made_from = comment[len(SIGNATURE):].decode(errors="replace").split("; split=")[0].split("|")
+    return not {entry.rsplit(":", 1)[0] for entry in made_from} <= present
+
+
 def zip_comment(cbz):
     try:
         with zipfile.ZipFile(cbz) as z:
@@ -385,18 +399,24 @@ def convert_each(files, args, series):
     check_tools([f for *_, f in jobs])
     jobs.sort()
 
+    # lower case: on Windows and macOS "Vol 1.CBZ" and "Vol 1.cbz" are the same file
+    originals = {str(f.resolve()).lower() for f in files}
+    present = {f.name for f in files}
     print(f"{count(len(jobs), 'file')} to convert, one CBZ each:")
-    for _, name, _, f in jobs:
-        print(f"  {f.name} -> {name}.cbz")
+    for _, name, n, f in jobs:
+        dest, warn = args.output / f"{name}.cbz", ""
+        if str(dest.resolve()).lower() in originals:
+            warn = "  <-- it would replace your original file: choose another folder with -o"
+        elif kept_safe(dest, [(n, f)], present, args):
+            warn = "  <-- a different CBZ with this name already exists: it will NOT be replaced"
+        print(f"  {f.name} -> {name}.cbz{warn}")
     if args.dry_run:
         print("\nPreview finished, nothing was created.")
         return
 
     args.output.mkdir(parents=True, exist_ok=True)
-    # lower case: on Windows and macOS "Vol 1.CBZ" and "Vol 1.cbz" are the same file
-    originals = {str(f.resolve()).lower() for f in files}
     print()
-    failed = []
+    failed, kept = [], []
     for i, (_, name, n, f) in enumerate(jobs, 1):
         dest = args.output / f"{name}.cbz"
         progress = f"{name} ({i}/{len(jobs)})"
@@ -407,6 +427,10 @@ def convert_each(files, args, series):
         if not args.overwrite and zip_comment(dest) == signature([(n, f)], args):
             print(f"{progress}: already done, skipping")
             continue
+        if kept_safe(dest, [(n, f)], present, args):
+            print(f"{progress}: KEPT: {dest.name} already exists and wasn't made from this file, so it is left as it is")
+            kept.append(name)
+            continue
         print(progress, flush=True)
         try:
             pages = make_cbz([(n, f)], dest, {"title": name, "series": series,
@@ -416,8 +440,13 @@ def convert_each(files, args, series):
             failed.append(name)
             continue
         print(f"  {count(pages, 'page')} -> {dest.name}")
+    if kept:
+        print(f"\nNOT replaced: {kept}. Those CBZ files already exist in the output folder: "
+              "choose another folder with -o, or use --overwrite to replace them.")
     if failed:
         sys.exit(f"\nNOT converted: {failed}. Check those files and run the same command again.")
+    if kept:
+        sys.exit(1)
 
 
 def main():
@@ -448,7 +477,8 @@ def main():
     p.add_argument("--no-split", dest="split", action="store_false", help="don't cut double pages in half")
     p.add_argument("--left-first", action="store_true", help="left half first (western reading order)")
     p.add_argument("--dry-run", action="store_true", help="preview only, create nothing")
-    p.add_argument("--overwrite", action="store_true", help="rebuild volumes even if they are already done")
+    p.add_argument("--overwrite", action="store_true",
+                   help="rebuild and replace existing CBZ files, even if already done or made from files that are gone")
     args = p.parse_args()
     if args.max_chapters is not None and args.max_chapters < 1:
         p.error("--max-chapters must be at least 1")
@@ -460,7 +490,8 @@ def main():
     series = args.series or args.folder.resolve().name
     # characters that Windows (and other systems) don't allow in file names
     file_series = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "-", series).rstrip(". ") or "Manga"
-    volume_name = re.compile(re.escape(file_series) + r" - Volume \d+\.cbz")
+    # any capitalisation: on Windows and macOS "my manga - volume 01.cbz" is the same file
+    volume_name = re.compile(re.escape(file_series) + r" - Volume (\d+)\.cbz", re.IGNORECASE)
 
     def chapter_format(f):
         if f.name.startswith("."):  # hidden files (e.g. "._Ch 1.pdf" made by Macs) are not chapters
@@ -518,11 +549,16 @@ def main():
           ("grouping them..." if args.detect == "none" else "looking for covers..."))
     volumes = group(chapters, args)
     width = max(2, len(str(args.first_volume + len(volumes) - 1)))
+    plan = [(args.first_volume + i, chs, args.output / f"{file_series} - Volume {args.first_volume + i:0{width}d}.cbz")
+            for i, chs in enumerate(volumes)]
+    present = {f.name for *_, f in candidates}  # every chapter file in the folder, even outside --from/--to
 
     print()
-    for i, chs in enumerate(volumes, args.first_volume):
+    for number, chs, dest in plan:
         warn = "  <-- few chapters?" if len(chs) < args.min_chapters and args.detect != "none" else ""
-        print(f"Volume {i:0{width}d}: {describe(chs)}{warn}")
+        if kept_safe(dest, chs, present, args):
+            warn += "  <-- a different volume with this name already exists: it will NOT be replaced"
+        print(f"Volume {number:0{width}d}: {describe(chs)}{warn}")
     if len(volumes) == 1 and len(chapters) > 1 and args.detect != "none" and not (args.starts or args.not_starts):
         print("\nTip: no volume start was found, so everything is in one volume. If the covers aren't in colour, "
               "try --detect portrait, or split by hand with --detect none plus --starts and/or --max-chapters.")
@@ -532,13 +568,16 @@ def main():
 
     args.output.mkdir(parents=True, exist_ok=True)
     print()
-    failed = []
-    for i, chs in enumerate(volumes, 1):
-        number = args.first_volume + i - 1
-        dest = args.output / f"{file_series} - Volume {number:0{width}d}.cbz"
+    failed, kept = [], []
+    for i, (number, chs, dest) in enumerate(plan, 1):
         progress = f"Volume {number:0{width}d} ({i}/{len(volumes)})"
         if not args.overwrite and zip_comment(dest) == signature(chs, args):
             print(f"{progress}: already done with the same chapters, skipping ({dest.name})")
+            continue
+        if kept_safe(dest, chs, present, args):  # e.g. a volume made earlier from chapters that are gone
+            print(f"{progress}: KEPT: {dest.name} already exists and can't be rebuilt from the chapters here, "
+                  "so it is left as it is")
+            kept.append(number)
             continue
         print(f"{progress}: {describe(chs)}", flush=True)
         try:
@@ -549,8 +588,16 @@ def main():
             failed.append(number)
             continue
         print(f"  {count(pages, 'page')} -> {dest.name}")
+    if kept:
+        existing = [int(m.group(1)) for m in map(volume_name.fullmatch, os.listdir(args.output)) if m]
+        print(f"\nNOT replaced: volumes {kept}, because volumes with the same name already exist.\n"
+              f"To add these chapters as new volumes after the ones you have, run the same command with "
+              f"--first-volume {max(existing, default=max(kept)) + 1}.\n"
+              "To replace the old volumes anyway, use --overwrite.")
     if failed:
         sys.exit(f"\nVolumes NOT created: {failed}. Check those chapters and run the same command again.")
+    if kept:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

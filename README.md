@@ -231,7 +231,7 @@ the program refuses and asks you to choose another folder with `-o`.
 | `--no-merge` | don't group: turn every file or folder into its own CBZ with the same name | off |
 | `--no-split` | do not cut double pages | cut |
 | `--left-first` | left half first (western reading order) | right half first |
-| `--overwrite` | rebuild volumes even if they are already done | skip them |
+| `--overwrite` | rebuild and replace existing CBZ files, even if already done or made from files that are gone | keep them |
 
 `python3 chapters2volumes.py --help` shows the same list.
 
@@ -256,8 +256,14 @@ the program refuses and asks you to choose another folder with `-o`.
   those characters are replaced by `-` in the file name, while the real title is kept in the volume information.
 - **Running it again** is safe and quick: volumes already made with the same chapters are skipped.
   If you add or replace chapters (or pages in a chapter folder), only the volumes that changed are rebuilt.
-- **New chapters later on?** Put them in a folder and convert them with `--first-volume` set to the next volume number,
-  or use `--from` with the first new chapter.
+- **Your existing volumes are never lost.** A CBZ that is already in the output folder is replaced only if it can be
+  rebuilt without losing anything: it was made by this program and all the files it was made from are still there.
+  Otherwise it is kept as it is, the preview marks it with `will NOT be replaced`, and the program tells you what to do.
+  `--overwrite` replaces it anyway.
+- **New chapters later on?** If you still have all the old chapters, just add the new ones and run the same command:
+  only the volumes that change are rebuilt. If the old chapters are gone (you kept only the volumes), add the new
+  chapters and run the command: the program keeps your volumes and tells you the `--first-volume` number to use,
+  so that the new volumes come after the old ones.
 - **Saving the volumes in the same folder as the chapters** is fine: the program recognises its own volumes and never mistakes them for chapters.
 - **Limits:** the cut is always made exactly in the middle of the image; a page made of several images in a PDF is not reassembled (you get a warning).
 
@@ -275,6 +281,7 @@ the program refuses and asks you to choose another folder with `-o`.
 | `a page is not a readable image` | that chapter is damaged or password-protected: replace it |
 | `Volumes NOT created: [...]` / `NOT converted: [...]` | the line marked `ERROR` names the damaged file: replace it and run the same command again |
 | `would replace your original file` | with `--no-merge`, save into another folder with `-o` |
+| `KEPT` / `NOT replaced` | a CBZ with that name already exists and can't be rebuilt: follow the advice printed (usually `--first-volume N`), choose another folder with `-o`, or use `--overwrite` |
 
 ## Checking that it works (optional)
 

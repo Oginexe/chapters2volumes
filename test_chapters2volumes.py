@@ -289,6 +289,45 @@ with tempfile.TemporaryDirectory() as tmp:
     assert not (vols / "Upper.cbz").exists(), "a file differing only in case was written next to the original"
     assert "files already made by this program" in run(vols, "-o", vols, "--no-merge", ok=False)
 
+    # new chapters added next to volumes made earlier, whose chapters are gone: the old volumes must survive
+    later = tmp / "Later"
+    later.mkdir()
+    cbz(later / "Later - Volume 01.cbz", {"1.jpg": cover(), "2.jpg": single(), "3.jpg": single()})  # made long ago
+    cbz(later / "later - volume 05.CBZ", {"1.jpg": single()})  # other capitalisation: still one of the volumes
+    old_volume = (later / "Later - Volume 01.cbz").read_bytes()
+    cbz(later / "Ch 157.cbz", {"1.jpg": cover()})
+    cbz(later / "Ch 158.cbz", {"1.jpg": single()})
+    assert "will NOT be replaced" in run(later, "-o", later, "--dry-run")
+    log = run(later, "-o", later, ok=False)
+    assert "--first-volume 6" in log and (later / "Later - Volume 01.cbz").read_bytes() == old_volume, \
+        "an existing volume that can't be rebuilt was replaced"
+    assert "2 chapters found" in log, "an old volume was taken for a chapter"
+    run(later, "-o", later, "--first-volume", "6")
+    assert len(pages(later / "Later - Volume 06.cbz")) == 2 and (later / "Later - Volume 01.cbz").read_bytes() == old_volume
+
+    # a volume made by this program, then one of its chapters deleted: it can't be rebuilt, so it is kept
+    gone = tmp / "Gone"
+    gone.mkdir()
+    cbz(gone / "c1.cbz", {"1.jpg": cover()})
+    cbz(gone / "c2.cbz", {"1.jpg": single()})
+    run(gone, "-o", tmp / "out7")
+    made = (tmp / "out7" / "Gone - Volume 01.cbz").read_bytes()
+    (gone / "c1.cbz").unlink()
+    cbz(gone / "c3.cbz", {"1.jpg": single()})
+    assert "KEPT" in run(gone, "-o", tmp / "out7", ok=False)
+    assert (tmp / "out7" / "Gone - Volume 01.cbz").read_bytes() == made, "a volume whose chapter is gone was replaced"
+    run(gone, "-o", tmp / "out7", "--overwrite")  # unless you ask for it
+    assert (tmp / "out7" / "Gone - Volume 01.cbz").read_bytes() != made
+
+    # --no-merge: a CBZ with the same name already in the output folder, not made from this file: kept
+    (tmp / "out8").mkdir()
+    cbz(tmp / "out8" / "Vol 1.cbz", {"1.jpg": single()})
+    foreign = (tmp / "out8" / "Vol 1.cbz").read_bytes()
+    assert "will NOT be replaced" in run(vols, "-o", tmp / "out8", "--no-merge", "--dry-run")
+    assert "would replace your original file" in run(vols, "-o", vols, "--no-merge", "--dry-run")
+    assert "KEPT" in run(vols, "-o", tmp / "out8", "--no-merge", ok=False)
+    assert (tmp / "out8" / "Vol 1.cbz").read_bytes() == foreign
+
     # odd names: a leading dash, and a huge number (a download ID) read as the chapter number
     odd = tmp / "Odd"
     odd.mkdir()

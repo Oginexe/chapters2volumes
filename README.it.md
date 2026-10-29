@@ -234,7 +234,7 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 | `--no-merge` | non unire: trasforma ogni file o cartella in un CBZ a sé, con lo stesso nome | spento |
 | `--no-split` | non tagliare le doppie pagine | taglia |
 | `--left-first` | prima la metà sinistra (lettura occidentale) | prima la destra |
-| `--overwrite` | rifà i volumi anche se sono già fatti | li salta |
+| `--overwrite` | rifà e sostituisce i CBZ esistenti, anche se già fatti o creati da file che non ci sono più | li lascia com'erano |
 
 `python3 chapters2volumes.py --help` mostra lo stesso elenco (in inglese).
 
@@ -259,8 +259,14 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
   quei caratteri diventano `-` nel nome del file, mentre il titolo vero resta nelle informazioni del volume.
 - **Rilanciarlo** è sicuro e veloce: i volumi già fatti con gli stessi capitoli vengono saltati.
   Se aggiungi o sostituisci dei capitoli (o delle pagine in una cartella-capitolo), vengono rifatti solo i volumi che sono cambiati.
-- **Nuovi capitoli più avanti?** Mettili in una cartella e convertili con `--first-volume` impostato al numero del volume successivo,
-  oppure usa `--from` con il primo capitolo nuovo.
+- **I tuoi volumi esistenti non vengono mai persi.** Un CBZ che c'è già nella cartella di uscita viene sostituito solo se
+  si può ricreare senza perdere niente: è stato fatto da questo programma e tutti i file da cui è nato ci sono ancora.
+  Altrimenti resta com'è, l'anteprima lo segna con `will NOT be replaced` e il programma ti dice cosa fare.
+  `--overwrite` lo sostituisce comunque.
+- **Nuovi capitoli più avanti?** Se hai ancora tutti i vecchi capitoli, aggiungi i nuovi e rilancia lo stesso comando:
+  vengono rifatti solo i volumi che cambiano. Se i vecchi capitoli non ci sono più (hai tenuto solo i volumi), aggiungi
+  i nuovi capitoli e lancia il comando: il programma lascia intatti i tuoi volumi e ti dice il numero da usare con
+  `--first-volume`, così i nuovi volumi vengono dopo quelli vecchi.
 - **Salvare i volumi nella stessa cartella dei capitoli** va bene: il programma riconosce i propri volumi e non li scambia mai per capitoli.
 - **Limiti:** il taglio è sempre esattamente a metà dell'immagine; una pagina composta da più immagini dentro un PDF non viene ricomposta (ricevi un avviso).
 
@@ -279,6 +285,7 @@ il programma si rifiuta e ti chiede di scegliere un'altra cartella con `-o`.
 | `a page is not a readable image` | un capitolo è rovinato o protetto da password | sostituisci quel file |
 | `Volumes NOT created: [...]` / `NOT converted: [...]` | alcuni file non sono stati creati | la riga con `ERROR` indica il file rovinato: sostituiscilo e rilancia lo stesso comando |
 | `would replace your original file` | con `--no-merge`, il risultato sovrascriverebbe un tuo file | salva in un'altra cartella con `-o` |
+| `KEPT` / `NOT replaced` | un CBZ con quel nome esiste già e non si può ricreare, quindi è stato lasciato com'era | segui il consiglio che compare (di solito `--first-volume N`), scegli un'altra cartella con `-o`, oppure usa `--overwrite` |
 
 ## Verificare che funzioni (facoltativo)
 
